@@ -1,5 +1,8 @@
 #define _CRT_SECURE_NO_WARNINGS
+
+#include <array>
 #include <iostream>
+#include <cctype> 
 
 #include "str.h"
 #include "vector.h"
@@ -23,98 +26,111 @@ struct query
 
 struct shift
 {
-	int x;
-	int y;
+	int i, j;
 };
 
-bool inside_map (const int x, const int y, const Vector<str>& board)
+bool inside_map(const int i, const int j, const Vector<str>& board)
 {
-	return (x >= 0 && x < board[0].length()) && (y >= 0 && y < board.size());
+	return (i >= 0 && j >= 0) && (i < board.size() && j < board[0].length());
 }
 
-shift where_city(const Vector<str>& board, const int x, const int y)
+shift where_city(const Vector<str>& board, const int i, const int j)
 {
 	shift shifts[] = {
 		{0, -1},
-		{-1, -1},
 		{-1, 0},
-		{-1, 1},
 		{0, 1},
-		{1, 1},
 		{1, 0},
+		{-1, -1},
+		{-1, 1},
+		{1, 1},
 		{1, -1}
 	};
 
-	for (const auto& [delta_x, delta_y] : shifts)
+	for (const auto& [delta_i, delta_j] : shifts)
 	{
-		if (!inside_map(x + delta_x, y + delta_y, board)) continue;
-		if (isupper(board[y + delta_y][x + delta_x])) return { x + delta_x, y + delta_y };
+		if (!inside_map(i + delta_i, j + delta_j, board)) continue;
+		if (isupper(board[i + delta_i][j + delta_j])) return { i + delta_i, j + delta_j };
 	}
+
 	return {};
+}
+
+
+
+str find_city_name(const Vector<str>& board, const int i, const int j)
+{
+	// Initialize the starting and ending indices to the current position
+	int start_index = j;
+	int end_index = j;
+
+	// Search to the right for the end of the city name
+	while (end_index < board[i].length() && isupper(board[i][end_index])) {
+		end_index++;
+	}
+
+	// Search to the left for the start of the city name
+	while (start_index >= 0 && isupper(board[i][start_index])) {
+		start_index--;
+	}
+
+	// Extract the city name from the board and return it
+	str city_name = board[i].substr(start_index + 1, end_index - start_index - 1);
+	return city_name;
 }
 
 void read()
 {
-	int width, height, flight_connections, query_count, duration, type;
-	str source, destination;
-	cin >> width >> height;
-	cin.ignore();
-
-	auto line = new char[width + 1]{};
+	int width, height, count_of_flights, time, query_count, query_type;
 
 	Vector<str> board;
 	Vector<flight> flights;
 	Vector<query> queries;
 
-	int i = 0;
-	for (i = 0; i < height; i++)
+	cin >> width >> height;
+	cin.ignore(); // discard the newline character from the input buffer
+
+	auto line = new char[width + 1] {};
+
+	for (int i = 0; i < height; i++)
 	{
-		fgets(line, width + 1, stdin);
+		cin.ignore();
+		cin >> line;
+		if (line[strlen(line) - 1] == '\n') line[strlen(line) - 1] = '\0';
 
-		str str_line(line);
-		str_line.trim();
+		str board_line(line);
+		board_line.trim();
 
-		board.push_back(str_line);
+		board.push_back(str(board_line));
 
 		memset(line, '\0', width + 1);
 	}
 
 	delete[] line;
 
-	cin >> flight_connections;
-	cin.ignore();
+	str from, to;
 
-	for (int i = 0; i < flight_connections; i++)
+	cin >> count_of_flights;
+	for (int i = 0; i < count_of_flights; i++)
 	{
-		cin >> source >> destination >> duration;
-		flight f;
-
-		f.from = source;
-		f.to = destination;
-		f.duration = duration;
-
+		cin.ignore();
+		cin >> from >> to >> time;
+		flight f = { from, to, time };
 		flights.push_back(f);
 	}
 
-	cin >> query_count;
-	cin.ignore();
+	str source, destination;
 
+	cin >> query_count;
 	for (int i = 0; i < query_count; i++)
 	{
-		cin >> source >> destination >> type;
-		query q;
-
-		q.source = source;
-		q.target = destination;
-		q.type = type;
-
+		cin.ignore();
+		cin >> source >> destination >> query_type;
+		query q = { source, destination, query_type};
 		queries.push_back(q);
 	}
 
-	//for (const auto& row : board)
-	//{
-	//	cout << row << endl;
-	//}
+	Vector<str> cities;
 
 	for (int i = 0; i < board.size(); i++)
 	{
@@ -123,10 +139,12 @@ void read()
 		{
 			if (row[j] == '*')
 			{
-				const auto& [new_x, new_y] = where_city(board, j, i);
-				//const auto& new_row = board[new_y];
+				//Found city, figure out where letters are
+				const auto& [city_i, city_j] = where_city(board, i, j);
 
-				//cout << city_begin << endl;
+				const auto& result = find_city_name(board, city_i, city_j);
+
+				cities.push_back(result);
 			}
 		}
 	}

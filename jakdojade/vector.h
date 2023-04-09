@@ -48,7 +48,7 @@ public:
         }
     }
 
-    const T& operator[](int i) const { return data_[i]; }
+    T operator[](int i) const { return data_[i]; }
 
     int size() const { return size_; }
 

@@ -4,6 +4,8 @@
 #include <iostream>
 #include <cctype>
 
+#include <unordered_map>
+
 #include "vector.h"
 
 #define _CRT_SECURE_NO_WARNINGS
@@ -45,11 +47,6 @@ class str {
     }
 
     // Helper method to free the buffer
-    void clear() {
-        delete[] buf_;
-        buf_ = nullptr;
-        size_ = 0;
-    }
 
 public:
     // Default constructor
@@ -57,6 +54,11 @@ public:
 
     // Constructor with a const char* argument
     explicit str(const char* s) {
+        assign(s);
+    }
+
+    explicit str(char* s)
+    {
         assign(s);
     }
 
@@ -71,6 +73,17 @@ public:
         size_ = other.size_;
         other.buf_ = nullptr;
         other.size_ = 0;
+    }
+
+    explicit str(const char c) {
+	    const char new_buf[2] = { c, '\0' };
+        assign(new_buf);
+    }
+
+    void clear() {
+        delete[] buf_;
+        buf_ = nullptr;
+        size_ = 0;
     }
 
     str(const char* s, unsigned int len) : buf_(nullptr), size_(0)
@@ -285,7 +298,12 @@ public:
         {
             throw std::out_of_range("Wrong index or sth, i don't know");
         }
-        return buf_[index];
+          return buf_[index];
+    }
+
+    str& operator+(const char c) {
+        *this += c;
+        return *this;
     }
 
     [[nodiscard]] unsigned int length() const { return size_; }
