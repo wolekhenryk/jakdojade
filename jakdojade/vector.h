@@ -20,11 +20,27 @@ public:
         }
     }
 
-    ~Vector() { clear(); }
+    ~Vector()
+    {
+	    clear();
+    }
 
     void push_back(const T& value)
     {
-        if (size_ == capacity_) reserve(capacity_ == 0 ? 1 : capacity_ * 2);
+        if (size_ == capacity_) {
+	        const int new_capacity = capacity_ == 0 ? 1 : capacity_ * 2;
+            T* new_data = new T[new_capacity];
+
+            for (int i = 0; i < size_; i++) {
+                new_data[i] = data_[i];
+            }
+
+            delete[] data_;
+
+            data_ = new_data;
+            capacity_ = new_capacity;
+        }
+
         data_[size_++] = value;
     }
 
@@ -55,7 +71,7 @@ public:
     void clear()
     {
         delete[] data_;
-        data_ = nullptr;
+        //data_ = nullptr;
         size_ = 0;
         capacity_ = 0;
     }
