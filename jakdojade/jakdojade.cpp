@@ -2,7 +2,8 @@
 
 #include <array>
 #include <iostream>
-#include <cctype> 
+#include <cctype>
+#include <unordered_map>
 
 #include "str.h"
 #include "vector.h"
@@ -148,6 +149,11 @@ void read()
 			}
 		}
 	}
+
+
+	unordered_map<int, str> city_map;
+	for (int i = 0; i < cities.size(); i++) city_map.insert(make_pair(i, cities[i]));
+
 }
 
 int main()
