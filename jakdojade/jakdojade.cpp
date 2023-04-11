@@ -9,6 +9,7 @@
 #include <queue>
 #include <stack>
 #include <limits>
+#include <map>
 
 #include "str.h"
 #include "vector.h"
@@ -47,22 +48,56 @@ struct node
 
 struct edge
 {
-	int to;
+	pair<int, int> route;
 	int weight;
 };
 
-struct cell
-{
-	int row;
-	int col;
-	int dist;
-};
+bool compareEdges(const edge& a, const edge& b) {
+	if (a.route.first == b.route.first)
+		return a.route.second < b.route.second;
+	return a.route.first < b.route.first;
+}
+
+vector<edge> cleanEdges(vector<edge>& edges) {
+	sort(edges.begin(), edges.end(), compareEdges);
+
+	vector<edge> cleanedEdges;
+	cleanedEdges.push_back(edges[0]);
+
+	for (int i = 1; i < edges.size(); i++) {
+		if (edges[i].route != edges[i - 1].route)
+			cleanedEdges.push_back(edges[i]);
+	}
+
+	return cleanedEdges;
+}
 
 bool is_valid(const vector<vector<int>>& map, const int i, const int j) {
 	const int n = map.size(); // number of rows
 	const int m = map[0].size(); // number of columns
 
 	return (i >= 0 && i < n && j >= 0 && j < m);
+}
+
+void dfs(vector<vector<int>>& map, const int i, const int j, const int start_city_id, int& distance, vector<edge>& edges)
+{
+	if (!is_valid(map, i, j) || map[i][j] == -2 || map[i][j] == -3) return;
+
+	if (map[i][j] >= 0 && map[i][j] != start_city_id)
+	{
+		edges.push_back({make_pair(start_city_id, map[i][j]), distance});
+		return;
+	}
+
+	map[i][j] = -3;
+	distance++;
+
+	dfs(map, i + 1, j, start_city_id, distance, edges);
+	dfs(map, i - 1, j, start_city_id, distance, edges);
+	dfs(map, i, j + 1, start_city_id, distance, edges);
+	dfs(map, i, j - 1, start_city_id, distance, edges);
+
+	distance--;
 }
 
 vector<vector<int>> to_graph(vector<vector<int>>& map)
@@ -148,6 +183,26 @@ str find_city_name(const Vector<str>& board, const int i, const int j)
 	// Extract the city name from the board and return it
 	str city_name = board[i].substr(start_index + 1, end_index - start_index - 1);
 	return city_name;
+}
+
+void keep_shortest_paths(vector<edge>& edges)
+{
+	map<pair<int, int>, int> shortest_paths;
+
+	for (const auto& e : edges)
+	{
+		auto& p = e.route;
+		if (shortest_paths.find(p) == shortest_paths.end() || e.weight < shortest_paths[p])
+		{
+			shortest_paths[p] = e.weight;
+		}
+	}
+
+	edges.clear();
+	for (const auto& p : shortest_paths)
+	{
+		edges.push_back({ p.first, p.second });
+	}
 }
 
 void read()
@@ -241,27 +296,30 @@ void read()
 		new_map.push_back(temp);
 	}
 
-	for (const auto& row : new_map)
-	{
-		for (const auto num : row)
-		{
-			cout << num << " ";
-		}
-		cout << endl;
-	}
+	//for (const auto& row : new_map)
+	//{
+	//	for (const auto num : row)
+	//	{
+	//		cout << num << " ";
+	//	}
+	//	cout << endl;
+	//}
 
+	vector<edge> edges;
 	for (int i = 0; i < new_map.size(); i++)
 	{
 		for (int j = 0; j < new_map[i].size(); j++)
 		{
 			if (new_map[i][j] >= 0)
 			{
-				//const auto& result = find_distances(new_map, i, j);
-				//for (const auto& element : result) cout << element << " ";
+				auto map_copy = new_map;
+				int d = 0;
+				dfs(map_copy, i, j, new_map[i][j], d, edges);
 			}
-			cout << endl;
 		}
 	}
+	keep_shortest_paths(edges);
+
 }
 
 int main()
