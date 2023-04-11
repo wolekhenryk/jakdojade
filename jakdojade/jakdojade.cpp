@@ -48,29 +48,12 @@ struct node
 
 struct edge
 {
-	pair<int, int> route;
+	int from;
+	int to;
 	int weight;
 };
 
-bool compareEdges(const edge& a, const edge& b) {
-	if (a.route.first == b.route.first)
-		return a.route.second < b.route.second;
-	return a.route.first < b.route.first;
-}
 
-vector<edge> cleanEdges(vector<edge>& edges) {
-	sort(edges.begin(), edges.end(), compareEdges);
-
-	vector<edge> cleanedEdges;
-	cleanedEdges.push_back(edges[0]);
-
-	for (int i = 1; i < edges.size(); i++) {
-		if (edges[i].route != edges[i - 1].route)
-			cleanedEdges.push_back(edges[i]);
-	}
-
-	return cleanedEdges;
-}
 
 bool is_valid(const vector<vector<int>>& map, const int i, const int j) {
 	const int n = map.size(); // number of rows
@@ -85,7 +68,7 @@ void dfs(vector<vector<int>>& map, const int i, const int j, const int start_cit
 
 	if (map[i][j] >= 0 && map[i][j] != start_city_id)
 	{
-		edges.push_back({make_pair(start_city_id, map[i][j]), distance});
+		edges.push_back({ start_city_id, map[i][j], distance });
 		return;
 	}
 
@@ -142,6 +125,10 @@ bool inside_map(const int i, const int j, const Vector<str>& board)
 	return (i >= 0 && j >= 0) && (i < board.size() && j < board[0].length());
 }
 
+void keep_shortest_paths(vector<edge>& edges)
+{
+}
+
 shift where_city(const Vector<str>& board, const int i, const int j)
 {
 	shift shifts[] = {
@@ -185,23 +172,58 @@ str find_city_name(const Vector<str>& board, const int i, const int j)
 	return city_name;
 }
 
-void keep_shortest_paths(vector<edge>& edges)
+void find_shortest_path(const int dest_city_id, const int start_city_id, const vector<edge>& graph, const unordered_map<int, str>& city_codes, const int query_type)
 {
-	map<pair<int, int>, int> shortest_paths;
+	int n = graph.size();
+	vector<int> dist(n, INT_MAX);
+	vector<int> parent(n, -1);  // initialize parent vector to -1
+	dist[start_city_id] = 0;
 
-	for (const auto& e : edges)
-	{
-		auto& p = e.route;
-		if (shortest_paths.find(p) == shortest_paths.end() || e.weight < shortest_paths[p])
-		{
-			shortest_paths[p] = e.weight;
+	priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
+	pq.push({ 0, start_city_id });
+
+	while (!pq.empty()) {
+		int curr_city_id = pq.top().second;
+		int curr_dist = pq.top().first;
+		pq.pop();
+		if (curr_dist > dist[curr_city_id]) continue;
+
+		for (auto& e : graph) {
+			if (e.from == curr_city_id) {
+				int neighbor_id = e.to;
+				int neighbor_dist = curr_dist + e.weight;
+				if (neighbor_dist < dist[neighbor_id]) {
+					dist[neighbor_id] = neighbor_dist;
+					parent[neighbor_id] = curr_city_id;  // update parent of neighbor node
+					pq.push({ neighbor_dist, neighbor_id });
+				}
+			}
 		}
 	}
 
-	edges.clear();
-	for (const auto& p : shortest_paths)
+	if (dist[dest_city_id] == INT_MAX) {
+		return;
+	}
+
+	vector<int> path;
+	int current_node = dest_city_id;
+	while (current_node != start_city_id)
 	{
-		edges.push_back({ p.first, p.second });
+		path.push_back(current_node);
+		current_node = parent[current_node];
+	}
+	reverse(path.begin(), path.end());
+
+
+	if (query_type == 0) cout << dist[dest_city_id] << endl;
+	else
+	{
+		cout << dist[dest_city_id] << " ";
+		for (const auto element : path)
+		{
+			if (element != dest_city_id) cout << city_codes.at(element) << " ";
+		}
+		cout << endl;
 	}
 }
 
@@ -251,7 +273,7 @@ void read()
 	{
 		cin.ignore();
 		cin >> source >> destination >> query_type;
-		query q = { source, destination, query_type};
+		query q = { source, destination, query_type };
 		queries.push_back(q);
 	}
 
@@ -275,7 +297,9 @@ void read()
 	}
 
 	vector<vector<int>> new_map;
+
 	unordered_map<int, str> city_codes;
+
 	int city_count = 0;
 
 	for (const auto& row : board)
@@ -318,7 +342,33 @@ void read()
 			}
 		}
 	}
+
+	for (const auto& [from, to, weight] : flights)
+	{
+		int from_code, to_code;
+		for (const auto& [fst, snd] : city_codes)
+		{
+			if (snd == from) from_code = fst;
+			if (snd == to) to_code = fst;
+		}
+
+		edges.push_back({from_code, to_code, weight});
+	}
+
 	keep_shortest_paths(edges);
+
+	for (const auto& [source, target, type] : queries)
+	{
+		int source_code, target_code;
+
+		for (const auto& [fst, snd] : city_codes)
+		{
+			if (snd == source) source_code = fst;
+			if (snd == target) target_code = fst;
+		}
+
+		find_shortest_path(target_code, source_code, edges, city_codes, type);
+	}
 
 }
 
