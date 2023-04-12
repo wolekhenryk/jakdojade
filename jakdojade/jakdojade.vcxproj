@@ -134,6 +134,8 @@
     <ClCompile Include="jakdojade.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="hash_map.h" />
+    <ClInclude Include="heap.h" />
     <ClInclude Include="smart_ptr.h" />
     <ClInclude Include="str.h" />
     <ClInclude Include="vector.h" />

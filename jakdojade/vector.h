@@ -122,6 +122,16 @@ public:
         return capacity_;
     }
 
+    T& front() const
+    {
+        return data_[0];
+    }
+
+    T& back() const
+    {
+        return data_[size_ - 1];
+    }
+
     void erase(const int index)
     {
         if (index < 0 || index >= size_) return;

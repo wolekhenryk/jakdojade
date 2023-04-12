@@ -4,6 +4,7 @@
 
 #include "str.h"
 #include "Vector.h"
+#include "hash_map.h"
 
 using std::cin, std::cout, std::endl;
 
@@ -84,7 +85,54 @@ shift where_city(const Vector<str>& board, const int i, const int j)
 	return {};
 }
 
-void read()
+bool is_valid(const Vector<Vector<int>>& map, const int i, const int j) {
+	const int n = map.size(); // number of rows
+	const int m = map[0].size(); // number of columns
+
+	return (i >= 0 && i < n && j >= 0 && j < m);
+}
+
+void dfs(Vector<Vector<int>>& map, const int i, const int j, const int start_city_id, int& distance, Vector<edge>& edges)
+{
+	if (!is_valid(map, i, j) || map[i][j] == -2 || map[i][j] == -3) return;
+
+	if (map[i][j] >= 0 && map[i][j] != start_city_id)
+	{
+		edges.push_back({ start_city_id, map[i][j], distance });
+		return;
+	}
+
+	map[i][j] = -3;
+	distance++;
+
+	dfs(map, i + 1, j, start_city_id, distance, edges);
+	dfs(map, i - 1, j, start_city_id, distance, edges);
+	dfs(map, i, j + 1, start_city_id, distance, edges);
+	dfs(map, i, j - 1, start_city_id, distance, edges);
+
+	distance--;
+}
+
+Vector<edge> map_to_graph(const Vector<Vector<int>>& new_map)
+{
+	Vector<edge> edges;
+	for (int i = 0; i < new_map.size(); i++)
+	{
+		for (int j = 0; j < new_map[i].size(); j++)
+		{
+			if (new_map[i][j] >= 0)
+			{
+				auto map_copy = new_map;
+				int d = 0;
+				dfs(map_copy, i, j, new_map[i][j], d, edges);
+			}
+		}
+	}
+
+	return edges;
+}
+
+Vector<edge> create_graph()
 {
 	int width, height, count_of_flights, time, query_count, query_type;
 
@@ -150,9 +198,11 @@ void read()
 		}
 	}
 
-
 	Vector<Vector<int>> new_map;
 	int city_count = 0;
+
+	hash_map<int, str> code_to_city;
+	hash_map<str, int> city_to_code;
 
 	for (const auto& row : board)
 	{
@@ -162,6 +212,10 @@ void read()
 			if (row[i] == '*')
 			{
 				temp.push_back(city_count);
+
+				code_to_city.insert(city_count, cities[city_count]);
+				city_to_code.insert(cities[city_count], city_count);
+
 				city_count++;
 			}
 			if (row[i] == '#') temp.push_back(-1);
@@ -170,11 +224,30 @@ void read()
 		}
 		new_map.push_back(temp);
 	}
+
+	auto result = map_to_graph(new_map);
+
+	//Add flights to map
+
+	for (const auto& [origin, destination, duration] : flights)
+	{
+		const auto& origin_city = city_to_code.at(origin);
+		const auto& destination_city = city_to_code.at(destination);
+
+		result.push_back({ origin_city, destination_city, duration });
+	}
+
+	return result;
 }
 
 int main()
 {
-	read();
+	const auto ready_map = create_graph();
+
+	for (const auto& [from, to, weight] : ready_map)
+	{
+		cout << from << " => " << to << " [" << weight << "]" << endl;
+	} 
 
 	return 0;
 }
