@@ -83,7 +83,7 @@ public:
 		return buckets_[hash_value].back().value;
 	}
 
-	V& at(const K& key)
+	V& at(const K& key) const 
 	{
 		const auto hash_value = hash<K>::make(key) % k_num_buckets;
 		for (auto& pair : buckets_[hash_value])

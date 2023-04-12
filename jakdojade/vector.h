@@ -11,7 +11,7 @@ class Vector
 public:
     Vector() : size_{ 0 }, capacity_{ 0 }, data_{ nullptr } {}
 
-    explicit Vector(const int size) : size_{ size }, capacity_{ size }, data_{ new T[size] } {}
+    explicit Vector(const int size) : data_{ new T[size] }, size_{ size }, capacity_{ size } {}
 
     Vector(size_t size, const T& value) : Vector(size) {
         for (size_t i = 0; i < size_; i++) {
@@ -131,6 +131,8 @@ public:
     {
         return data_[size_ - 1];
     }
+
+    bool empty() const { return size_ == 0; }
 
     void erase(const int index)
     {

@@ -4,6 +4,7 @@
 
 #include "str.h"
 #include "Vector.h"
+#include "heap.h"
 #include "hash_map.h"
 
 using std::cin, std::cout, std::endl;
@@ -35,6 +36,12 @@ struct edge
 	int from;
 	int to;
 	int weight;
+};
+
+struct road
+{
+	int distance;
+	Vector<int> path;
 };
 
 bool inside_map(const int i, const int j, const Vector<str>& board)
@@ -132,7 +139,86 @@ Vector<edge> map_to_graph(const Vector<Vector<int>>& new_map)
 	return edges;
 }
 
-Vector<edge> create_graph()
+void dijkstra(const Vector<edge>& graph, const int start_city, const int end_city, const hash_map<int, str>& code_to_city, const int query_type)
+{
+	if (graph.empty())
+	{
+		cout << 0 << endl;
+		return;
+	}
+
+	Vector distances(graph.size(), inf);
+	Vector<Vector<int>> paths(graph.size());
+	Vector<road> found_roads;
+
+	distances[start_city] = 0;
+
+	heap<int> pq;
+	pq.push(start_city);
+
+	while (!pq.empty())
+	{
+		const auto curr = pq.top();
+		pq.pop();
+
+		if (curr == end_city)
+		{
+			if (query_type == 0) found_roads.push_back({ distances[end_city], Vector<int>()});
+			if (query_type == 1)
+			{
+				found_roads.push_back({ distances[end_city], paths[end_city] });
+			}
+		}
+
+		for (const auto& [from, to, weight] : graph)
+		{
+			if (from == curr)
+			{
+				const auto next = to;
+				const auto cost = weight;
+
+				if (distances[curr] + cost < distances[next])
+				{
+					distances[next] = distances[curr] + cost;
+					pq.push(next);
+
+					// Store the path to next as a list of vertices
+					if (curr != end_city && curr != start_city)
+					{
+						paths[next] = paths[curr];
+						paths[next].push_back(curr);
+					}
+				}
+			}
+		}
+	}
+
+	if (query_type == 0)
+	{
+		auto& min_distance = found_roads[0].distance;
+		for (const auto& [distance, path] : found_roads)
+		{
+			if (min_distance > distance) min_distance = distance;
+		}
+
+		cout << min_distance << endl;
+	}
+
+	if (query_type == 1)
+	{
+		auto& min_road = found_roads[0];
+		for (const auto& road : found_roads)
+		{
+			if (min_road.distance > road.distance) min_road = road;
+		}
+
+		cout << min_road.distance << " ";
+		for (const auto& city_code : min_road.path) cout << code_to_city.at(city_code) << " ";
+		cout << endl;
+	}
+}
+
+void solve()
 {
 	int width, height, count_of_flights, time, query_count, query_type;
 
@@ -141,7 +227,7 @@ Vector<edge> create_graph()
 	Vector<query> queries;
 
 	cin >> width >> height;
-	cin.ignore();
+	//cin.ignore();
 
 	auto line = new char[width + 1] {};
 
@@ -225,29 +311,29 @@ Vector<edge> create_graph()
 		new_map.push_back(temp);
 	}
 
-	auto result = map_to_graph(new_map);
+	auto ready_graph = map_to_graph(new_map);
 
 	//Add flights to map
-
 	for (const auto& [origin, destination, duration] : flights)
 	{
 		const auto& origin_city = city_to_code.at(origin);
 		const auto& destination_city = city_to_code.at(destination);
 
-		result.push_back({ origin_city, destination_city, duration });
+		ready_graph.push_back({ origin_city, destination_city, duration });
 	}
 
-	return result;
+	for (const auto& [starting_city, ending_city, query_type] : queries)
+	{
+		const auto& starting_city_code = city_to_code.at(starting_city);
+		const auto& ending_city_code = city_to_code.at(ending_city);
+
+		dijkstra(ready_graph, starting_city_code, ending_city_code, code_to_city, query_type);
+	}
 }
 
 int main()
 {
-	const auto ready_map = create_graph();
-
-	for (const auto& [from, to, weight] : ready_map)
-	{
-		cout << from << " => " << to << " [" << weight << "]" << endl;
-	} 
+	solve();
 
 	return 0;
 }
