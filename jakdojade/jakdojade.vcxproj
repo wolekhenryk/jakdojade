@@ -134,6 +134,7 @@
     <ClCompile Include="jakdojade.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="smart_ptr.h" />
     <ClInclude Include="str.h" />
     <ClInclude Include="vector.h" />
   </ItemGroup>

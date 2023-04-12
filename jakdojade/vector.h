@@ -9,54 +9,65 @@ class Vector
     int size_;
     int capacity_;
 public:
-    Vector() : data_(nullptr), size_(0), capacity_(0) {}
+    Vector() : size_{ 0 }, capacity_{ 0 }, data_{ nullptr } {}
 
-    Vector(const Vector<T>& other) : data_(nullptr), size_(0), capacity_(0)
-    {
-        reserve(other.size_);
+    explicit Vector(const int size) : size_{ size }, capacity_{ size }, data_{ new T[size] } {}
 
-        for (int i = 0; i < other.size_; i++) {
-            push_back(other[i]);
+    Vector(size_t size, const T& value) : Vector(size) {
+        for (size_t i = 0; i < size_; i++) {
+            data_[i] = value;
         }
     }
-
-    ~Vector()
-    {
-	    clear();
+    Vector(std::initializer_list<T> values) : Vector(values.size()) {
+        std::copy(values.begin(), values.end(), data_);
+    }
+    Vector(const Vector<T>& other) : Vector(other.size_) {
+        std::copy(other.data_, other.data_ + other.size_, data_);
+    }
+    Vector(Vector<T>&& other) noexcept : size_{ other.size_ }, capacity_{ other.capacity_ }, data_{ other.data_ } {
+        other.size_ = 0;
+        other.capacity_ = 0;
+        other.data_ = nullptr;
+    }
+    ~Vector() {
+        clear();
     }
 
-    void push_back(const T& value)
-    {
-        if (size_ == capacity_) {
-	        const int new_capacity = capacity_ == 0 ? 1 : capacity_ * 2;
-            T* new_data = new T[new_capacity];
-
-            for (int i = 0; i < size_; i++) {
-                new_data[i] = data_[i];
-            }
-
-            delete[] data_;
-
-            data_ = new_data;
-            capacity_ = new_capacity;
+    Vector<T>& operator=(const Vector<T>& other) {
+        if (this != &other) {
+            clear();
+            reserve(other.size_);
+            std::copy(other.data_, other.data_ + other.size_, data_);
+            size_ = other.size_;
         }
-
-        data_[size_++] = value;
+        return *this;
     }
 
-    void pop_back()
-    {
-        if (size_ > 0) size_--;
+    Vector<T>& operator=(Vector<T>&& other) noexcept {
+        if (this != &other) {
+            clear();
+            size_ = other.size_;
+            capacity_ = other.capacity_;
+            data_ = other.data_;
+            other.size_ = 0;
+            other.capacity_ = 0;
+            other.data_ = nullptr;
+        }
+        return *this;
     }
 
-    void reserve(int new_capacity)
-    {
-        if (new_capacity > capacity_)
-        {
+    void clear() noexcept {
+        size_ = 0;
+        capacity_ = 0;
+        delete[] data_;
+        data_ = nullptr;
+    }
+
+    void reserve(size_t new_capacity) {
+        if (new_capacity > capacity_) {
             T* new_data = new T[new_capacity];
-            if (data_ != nullptr)
-            {
-                for (int i = 0; i < size_; i++) new_data[i] = data_[i];
+            if (data_) {
+                std::copy(data_, data_ + size_, new_data);
                 delete[] data_;
             }
             data_ = new_data;
@@ -64,16 +75,51 @@ public:
         }
     }
 
-    T operator[](int i) const { return data_[i]; }
+    void resize(size_t new_size, const T& value = T()) {
+        if (new_size < size_) {
+            for (size_t i = new_size; i < size_; i++) {
+                data_[i].~T();
+            }
+            size_ = new_size;
+        }
+        else if (new_size > size_) {
+            reserve(new_size);
+            for (size_t i = size_; i < new_size; i++) {
+                new (&data_[i]) T(value);
+            }
+            size_ = new_size;
+        }
+    }
 
-    int size() const { return size_; }
+    void push_back(const T& value) {
+        if (size_ == capacity_) {
+            reserve(capacity_ == 0 ? 1 : 2 * capacity_);
+        }
+        new (&data_[size_]) T(value);
+        size_++;
+    }
 
-    void clear()
-    {
-        delete[] data_;
-        //data_ = nullptr;
-        size_ = 0;
-        capacity_ = 0;
+    void pop_back() {
+        if (size_ > 0) {
+            data_[size_ - 1].~T();
+            size_--;
+        }
+    }
+
+    T& operator[](size_t index) {
+        return data_[index];
+    }
+
+    const T& operator[](size_t index) const {
+        return data_[index];
+    }
+
+    size_t size() const noexcept {
+        return size_;
+    }
+
+    size_t capacity() const noexcept {
+        return capacity_;
     }
 
     void erase(const int index)

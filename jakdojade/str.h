@@ -76,7 +76,7 @@ public:
     }
 
     explicit str(const char c) {
-	    const char new_buf[2] = { c, '\0' };
+        const char new_buf[2] = { c, '\0' };
         assign(new_buf);
     }
 
@@ -239,7 +239,7 @@ public:
         return -1;
     }
 
-    [[nodiscard]] Vector<str> split(const char delimiter) const
+    /*[[nodiscard]] Vector<str> split(const char delimiter) const
     {
         Vector<str> result;
 
@@ -259,8 +259,8 @@ public:
             start = p + 1;
         }
 
-        return Vector<str>(result);
-    }
+        return (result);
+    }*/
 
 
     [[nodiscard]] str substr(const int start, const int len) const {
@@ -298,7 +298,7 @@ public:
         {
             throw std::out_of_range("Wrong index or sth, i don't know");
         }
-          return buf_[index];
+        return buf_[index];
     }
 
     str& operator+(const char c) {
