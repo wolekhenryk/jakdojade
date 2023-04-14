@@ -13,7 +13,7 @@ constexpr int first_prime_number = 96134671;
 constexpr int second_prime_number = 80749733;
 
 constexpr size_t starting_hash = 5381;
-constexpr size_t k_num_buckets = 3000007;
+constexpr size_t k_num_buckets = 107;
 
 template <typename T>
 class hash
@@ -117,6 +117,19 @@ public:
 				return;
 			}
 		}
+	}
+
+	typename Vector<k_v_pair<K, V>>::iterator find(const K& key)
+	{
+		const auto hash_value = hash<K>::make(key) % k_num_buckets;
+		auto& bucket = buckets_[hash_value];
+
+		for (auto it = bucket.begin(); it != bucket.end(); ++it)
+		{
+			if (it->key == key) return it;
+		}
+
+		return bucket.end();
 	}
 
 private:

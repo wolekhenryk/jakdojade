@@ -26,9 +26,6 @@
     <ClInclude Include="vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="smart_ptr.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="heap.h">
       <Filter>Header Files</Filter>
     </ClInclude>

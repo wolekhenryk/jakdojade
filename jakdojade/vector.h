@@ -132,6 +132,12 @@ public:
         return data_[size_ - 1];
     }
 
+    void reverse() {
+        for (int i = 0; i < size_ / 2; i++) {
+            std::swap(data_[i], data_[size_ - i - 1]);
+        }
+    }
+
     bool empty() const { return size_ == 0; }
 
     void erase(const int index)
