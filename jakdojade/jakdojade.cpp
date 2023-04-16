@@ -57,10 +57,11 @@ bool inside_map(const int i, const int j, const Vector<str>& board)
     return (i >= 0 && j >= 0) && (i < board.size() && j < board[0].length());
 }
 
-bool in_bounds(const Vector<str>& board, const int i, const int j)
-{
-    if (i < 0 || j < 0 || i >= board.size() || j >= board[0].length()) return false;
-    return true;
+bool is_valid(const Vector<Vector<int>>& map, const int i, const int j) {
+    const int n = map.size(); // number of rows
+    const int m = map[0].size(); // number of columns
+
+    return (i >= 0 && i < n && j >= 0 && j < m);
 }
 
 str find_city_name(const Vector<str>& board, const int i, const int j)
@@ -158,7 +159,7 @@ void dijkstra(const Vector<Vector<pair>>& graph, const int start_city_id, const 
     }
 }
 
-void bfs_build_graph(const Vector<Vector<pair>>& graph, Vector<Vector<pair>>& adj_list, const int start_city, const Vector<int>& cities)
+void bfs_build_graph(const Vector<Vector<pair>>& graph, Vector<Vector<pair>>& adj_list, const int start_city, const Vector<int>& neighbors)
 {
     const int n = graph.size();
     Vector distances(n, -1);
@@ -183,11 +184,31 @@ void bfs_build_graph(const Vector<Vector<pair>>& graph, Vector<Vector<pair>>& ad
     }
 
     Vector<pair> temp;
-    for (const auto city : cities)
+    for (const auto city : neighbors)
     {
         temp.push_back({ city, distances[city] });
     }
     adj_list.push_back(temp);
+}
+
+void dfs_find_neighbors(const Vector<Vector<int>>& grid, const int i, const int j, const int start, Vector<Vector<bool>>& visited, Vector<int>& neighbors)
+{
+    if (!is_valid(grid, i, j) || grid[i][j] == -2 || visited[i][j]) return;
+    if (grid[i][j] >= 0 && grid[i][j] != start)
+    {
+        const auto id = grid[i][j];
+	    for (const auto& element : neighbors) if (grid[i][j] == element) return;
+        neighbors.push_back(grid[i][j]);
+
+        return;
+    }
+
+    visited[i][j] = true;
+
+    dfs_find_neighbors(grid, i + 1, j, start, visited, neighbors);
+    dfs_find_neighbors(grid, i - 1, j, start, visited, neighbors);
+    dfs_find_neighbors(grid, i, j + 1, start, visited, neighbors);
+    dfs_find_neighbors(grid, i, j - 1, start, visited, neighbors);
 }
 
 void solve()
@@ -245,20 +266,28 @@ void solve()
         {
             if (row[j] == '*')
             {
-                //Found city, figure out where letters are
                 const auto& [city_i, city_j] = where_city(board, i, j);
 
                 const auto& result = find_city_name(board, city_i, city_j);
-                //cout << "City " << result << " at coords [" << city_i << ", " << city_j << "]" << endl;
 
                 cities.push_back(result);
             }
         }
     }
 
-    //return;
+    Vector<Vector<int>> new_map;
 
-    //auto start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < board.size(); i++)
+    {
+        Vector<int> temp;
+        for (int j = 0; j < board[0].length(); j++)
+        {
+            if (board[i][j] == '*') temp.push_back(get_vertex_id(board, i, j));
+            else if (board[i][j] == '#') temp.push_back(-1);
+            else if (board[i][j] == '.' || isalpha(board[i][j])) temp.push_back(-2);
+        }
+        new_map.push_back(temp);
+    }
 
     int city_count = 0;
 
@@ -314,21 +343,17 @@ void solve()
 
     for (int i = 0; i < width * height; i++)
     {
-        if (city_ids.contains(i)) bfs_build_graph(graph, new_graph, i, city_ids);
+        if (city_ids.contains(i))
+        {
+            Vector visited(height, Vector(width, false));
+            Vector<int> neighbors;
+
+            dfs_find_neighbors(new_map, i / width, i% width, i, visited, neighbors);
+
+            bfs_build_graph(graph, new_graph, i, neighbors);
+        }
         else new_graph.push_back(Vector<pair>());
     }
-
-    //for (int i = 0; i < new_graph.size(); i++)
-    //{
-    //    cout << "FROM " << i << endl;
-    //    for (const auto& [to, weight] : new_graph[i]) cout << "=> " << to << " [" << weight << "], ";
-    //    cout << endl;
-    //}
-
-    //auto end = std::chrono::high_resolution_clock::now();
-    //auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-
-    //cout << "Constructed graph in " << duration << "ms" << endl;
 
     for (const auto& [src, dst, time] : flights)
     {
@@ -338,7 +363,6 @@ void solve()
         new_graph[src_city_id].push_back({ dst_city_id, time });
     }
 
-    //start = std::chrono::high_resolution_clock::now();
 
     for (const auto& [from, to, type] : queries)
     {
@@ -348,9 +372,6 @@ void solve()
         dijkstra(new_graph, from_city_id, to_city_id, code_to_city, type);
     }
 
-    //end = std::chrono::high_resolution_clock::now();
-    //duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    //cout << "Path finding took " << duration << "ms" << endl;
 }
 
 int main()

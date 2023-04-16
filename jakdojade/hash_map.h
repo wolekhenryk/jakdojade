@@ -13,7 +13,7 @@ constexpr int first_prime_number = 96134671;
 constexpr int second_prime_number = 80749733;
 
 constexpr size_t starting_hash = 5381;
-constexpr size_t k_num_buckets = 107;
+constexpr size_t k_num_buckets = 31;
 
 template <typename T>
 class hasher
