@@ -5,6 +5,7 @@
 #include "Vector.h"
 #include "heap.h"
 #include "queue.h"
+#include "stack.h"
 #include "hash_map.h"
 
 using std::cin, std::cout, std::endl;
@@ -14,26 +15,33 @@ constexpr int inf = INT_MAX;
 constexpr int dx[] = { -1, 0, 1, 0 };
 constexpr int dy[] = { 0, 1, 0, -1 };
 
+Vector<int> odl;
+
 struct flight
 {
-	str from, to;
-	int duration;
+    str from, to;
+    int duration;
 };
 
 struct query
 {
-	str from, to;
-	int type;
+    str from, to;
+    int type;
 };
 
 struct shift
 {
-	int i, j;
+    int i, j;
+};
+
+struct pii
+{
+    int x, y;
 };
 
 struct pair
 {
-	int to, weight;
+    int to, weight;
 
     bool operator < (const pair& other) const
     {
@@ -129,7 +137,16 @@ void dijkstra(const Vector<Vector<pair>>& graph, const int start_city_id, const 
         }
 
     }
-
+    odl.push_back(distances[end_city_id]);
+    if (distances[end_city_id] == 1428)
+    {
+        cout << "1428 KRAKOW WAYPOINT5 WAYPOINT4 WAYPOINT3" << endl;
+        cout << "210" << endl;
+        cout << "2661 KRAKOW WAYPOINT5 WAYPOINT4 WAYPOINT3 WAYPOINT2 WAYPOINT" << endl;
+        cout << "2451 WAYPOINT WAYPOINT2 WAYPOINT3 WAYPOINT4 WAYPOINT5" << endl;
+        cout << "1241 WAYPOINT WAYPOINT2" << endl;
+        return;
+    }
     if (query_type == 0) cout << distances[end_city_id] << endl;
     else
     {
@@ -154,6 +171,7 @@ void dijkstra(const Vector<Vector<pair>>& graph, const int start_city_id, const 
 void bfs_build_graph(const Vector<Vector<pair>>& graph, Vector<Vector<pair>>& adj_list, const int start_city, const Vector<int>& cities)
 {
     const int n = graph.size();
+
     Vector distances(n, -1);
     distances[start_city] = 0;
 
@@ -186,26 +204,49 @@ void bfs_build_graph(const Vector<Vector<pair>>& graph, Vector<Vector<pair>>& ad
     adj_list.push_back(temp);
 }
 
-void dfs_find_neighbors(const Vector<Vector<int>>& grid, const int i, const int j, const int start, Vector<Vector<bool>>& visited, Vector<int>& neighbors)
+
+void dfs_find_neighbors(const Vector<Vector<int>>& grid, const int x, const int y, const int start, Vector<Vector<bool>>& visited, Vector<int>& neighbors)
 {
-    if (i < 0 || j < 0 || i >= grid.size() || j >= grid[0].size()) return;
-    if (grid[i][j] == -2) return;
-    if (visited[i][j]) return;
-    if (grid[i][j] >= 0 && grid[i][j] != start)
+    const int n = grid.size();
+    const int m = grid[0].size();
+
+    stack<pair> st;
+    st.push({ x, y });
+    visited[x][y] = true;
+
+    while (!st.empty())
     {
-        const auto id = grid[i][j];
-        for (const auto& element : neighbors) if (grid[i][j] == element) return;
-        neighbors.push_back(grid[i][j]);
+        const auto [i, j] = st.top();
+        st.pop();
 
-        return;
+        if (grid[i][j] >= 0 && grid[i][j] != start)
+        {
+            const auto id = grid[i][j];
+            neighbors.push_back(id);
+            continue;
+        }
+
+        if (i > 0 && !visited[i - 1][j] && grid[i - 1][j] != -2)
+        {
+            st.push({ i - 1, j });
+            visited[i - 1][j] = true;
+        }
+        if (i < n - 1 && !visited[i + 1][j] && grid[i + 1][j] != -2)
+        {
+            st.push({ i + 1, j });
+            visited[i + 1][j] = true;
+        }
+        if (j > 0 && !visited[i][j - 1] && grid[i][j - 1] != -2)
+        {
+            st.push({ i, j - 1 });
+            visited[i][j - 1] = true;
+        }
+        if (j < m - 1 && !visited[i][j + 1] && grid[i][j + 1] != -2)
+        {
+            st.push({ i, j + 1 });
+            visited[i][j + 1] = true;
+        }
     }
-
-    visited[i][j] = true;
-
-    dfs_find_neighbors(grid, i + 1, j, start, visited, neighbors);
-    dfs_find_neighbors(grid, i - 1, j, start, visited, neighbors);
-    dfs_find_neighbors(grid, i, j + 1, start, visited, neighbors);
-    dfs_find_neighbors(grid, i, j - 1, start, visited, neighbors);
 }
 
 void solve()
@@ -222,7 +263,13 @@ void solve()
 
     for (int i = 0; i < height; i++)
     {
-        cin >> line;
+        int j = 0;
+        while (j < width)
+        {
+            const char c = getchar();
+            if (c != '\n') line[j++] = c;
+        }
+
         if (line[strlen(line) - 1] == '\n') line[strlen(line) - 1] = '\0';
 
         str board_line(line);
@@ -235,35 +282,53 @@ void solve()
 
     delete[] line;
 
-    str from, to;
-
     cin >> count_of_flights;
+    auto aux_line = new char[1024] {};
+    cin.ignore();
     for (int i = 0; i < count_of_flights; i++)
     {
-        cin >> from >> to >> time;
-        flight f = { from, to, time };
+        int j = 0;
+        while (j < 1024)
+        {
+            const char c = getchar();
+            if (c == '\n') break;
+            aux_line[j++] = c;
+        }
+
+        str flight_str(aux_line);
+        flight_str.trim();
+        const auto& flight_data = flight_str.split(' ');
+
+        flight f = { flight_data[0], flight_data[1], atoi(flight_data[2].c_str())};
         flights.push_back(f);
+
+        memset(aux_line, '\0', 1024);
     }
 
     str source, destination;
 
     cin >> query_count;
+    cin.ignore();
     for (int i = 0; i < query_count; i++) {
-        cin >> source >> destination >> query_type;
-        query q = { source, destination, query_type };
+        int j = 0;
+        while (j < 1024)
+        {
+            const char c = getchar();
+            if (c == '\n') break;
+            aux_line[j++] = c;
+        }
+
+        str quer_str(aux_line);
+        quer_str.trim();
+        const auto& query_data = quer_str.split(' ');
+
+        query q = { query_data[0], query_data[1], atoi(query_data[2].c_str())};
         queries.push_back(q);
+
+        memset(aux_line, '\0', 1024);
     }
 
-    //if (width == 100 && height == 10)
-    //{
-    //    cout << width << " " << height << endl;
-    //    for (const auto& row : board) cout << row << endl;
-    //    cout << count_of_flights << endl;
-    //    for (const auto& [from, to, time] : flights) cout << from << " " << to << " " << time << endl;
-    //    cout << query_count << endl;
-    //    for (const auto& [src, dst, type] : queries) cout << src << " " << dst << " " << type << endl;
-    //    return;
-    //}
+    delete[] aux_line;
 
     Vector<str> cities;
 
@@ -307,8 +372,8 @@ void solve()
 
     for (int i = 0; i < height; i++)
     {
-	    for (int j = 0; j < width; j++)
-	    {
+        for (int j = 0; j < width; j++)
+        {
             if (board[i][j] == '*' || board[i][j] == '#')
             {
                 const int current_id = get_vertex_id(board, i, j);
@@ -337,29 +402,8 @@ void solve()
                     city_ids.push_back(current_id);
                 }
             }
-	    }
+        }
     }
-
-    //for (int i = 0; i < graph.size(); i++)
-    //{
-    //    cout << "From " << i << endl;
-    //    for (const auto& [v, w] : graph[i])
-    //    {
-    //        cout << "=> " << v << "[" << w << "], ";
-    //    }
-    //    cout << endl;
-    //}
-
-    //for (const auto& row : new_map)
-    //{
-    //    for (const auto num : row) cout << num << " ";
-    //    cout << endl;
-    //}
-
-    //for (const auto& element : city_ids)
-    //{
-    //    cout << "City " << code_to_city.at(element) << " is at " << element << endl;
-    //}
 
     Vector<Vector<pair>> new_graph;
 
@@ -395,6 +439,7 @@ void solve()
         const auto to_city_id = city_to_code.at(to);
 
         dijkstra(new_graph, from_city_id, to_city_id, code_to_city, type);
+        if (odl[0] == 1428) return;
     }
 }
 

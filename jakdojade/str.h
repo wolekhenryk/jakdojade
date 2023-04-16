@@ -239,7 +239,7 @@ public:
         return -1;
     }
 
-    /*[[nodiscard]] Vector<str> split(const char delimiter) const
+    [[nodiscard]] Vector<str> split(const char delimiter) const
     {
         Vector<str> result;
 
@@ -260,7 +260,7 @@ public:
         }
 
         return (result);
-    }*/
+    }
 
 
     [[nodiscard]] str substr(const int start, const int len) const {
