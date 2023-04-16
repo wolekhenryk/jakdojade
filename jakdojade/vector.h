@@ -122,6 +122,15 @@ public:
         return capacity_;
     }
 
+    bool contains (const T& element) const
+    {
+	    for (auto it = this->begin(); it != this->end(); ++it)
+	    {
+		    if (*it == element) return true;
+	    }
+        return false;
+    }
+
     T& front() const
     {
         return data_[0];

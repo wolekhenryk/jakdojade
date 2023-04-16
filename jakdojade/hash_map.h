@@ -16,7 +16,7 @@ constexpr size_t starting_hash = 5381;
 constexpr size_t k_num_buckets = 107;
 
 template <typename T>
-class hash
+class hasher
 {
 public:
 	static size_t make(const T& value)
@@ -58,7 +58,7 @@ public:
 
 	void insert(const K& key, const V& value)
 	{
-		const auto hash_value = hash<K>::make(key) % k_num_buckets;
+		const auto hash_value = hasher<K>::make(key) % k_num_buckets;
 		for (auto& pair : buckets_[hash_value])
 		{
 			if (pair.key == key)
@@ -72,7 +72,7 @@ public:
 
 	V& operator[](const K& key)
 	{
-		const auto hash_value = hash<K>::make(key) % k_num_buckets;
+		const auto hash_value = hasher<K>::make(key) % k_num_buckets;
 		for (auto& pair : buckets_[hash_value]) {
 			if (pair.key == key) {
 				return pair.value;
@@ -85,7 +85,7 @@ public:
 
 	V& at(const K& key) const 
 	{
-		const auto hash_value = hash<K>::make(key) % k_num_buckets;
+		const auto hash_value = hasher<K>::make(key) % k_num_buckets;
 		for (auto& pair : buckets_[hash_value])
 		{
 			if (pair.key == key)
@@ -98,7 +98,7 @@ public:
 
 	[[nodiscard]] bool contains(const K& key) const
 	{
-		const auto hash_value = hash<K>::make(key) % k_num_buckets;
+		const auto hash_value = hasher<K>::make(key) % k_num_buckets;
 		for (const auto& pair : buckets_[hash_value]) {
 			if (pair.key == key) {
 				return true;
@@ -109,7 +109,7 @@ public:
 
 	void erase(const K& key)
 	{
-		const auto hash_value = hash<K>::make(key) % k_num_buckets;
+		const auto hash_value = hasher<K>::make(key) % k_num_buckets;
 		auto& bucket = buckets_[hash_value];
 		for (auto iter = bucket.begin(); iter != bucket.end(); ++iter) {
 			if (iter->key == key) {
@@ -121,7 +121,7 @@ public:
 
 	typename Vector<k_v_pair<K, V>>::iterator find(const K& key)
 	{
-		const auto hash_value = hash<K>::make(key) % k_num_buckets;
+		const auto hash_value = hasher<K>::make(key) % k_num_buckets;
 		auto& bucket = buckets_[hash_value];
 
 		for (auto it = bucket.begin(); it != bucket.end(); ++it)

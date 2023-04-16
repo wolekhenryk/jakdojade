@@ -32,5 +32,8 @@
     <ClInclude Include="hash_map.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="queue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
