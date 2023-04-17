@@ -39,6 +39,10 @@ struct pii
     int x, y;
 };
 
+struct tuple {
+    int x, y, z;
+};
+
 struct pair
 {
     int to, weight;
@@ -61,7 +65,7 @@ struct pair
 
 bool inside_map(const int height, const int width, const int i, const int j)
 {
-    return i >= 0 && j >= 0 && i < height && j < width;
+    return i >= 0 && j >= 0 && i < height&& j < width;
 }
 
 str find_city_name(const Vector<str>& board, const int i, const int j)
@@ -138,15 +142,15 @@ void dijkstra(const Vector<Vector<pair>>& graph, const int start_city_id, const 
 
     }
     odl.push_back(distances[end_city_id]);
-    if (distances[end_city_id] == 1428)
-    {
-        cout << "1428 KRAKOW WAYPOINT5 WAYPOINT4 WAYPOINT3" << endl;
-        cout << "210" << endl;
-        cout << "2661 KRAKOW WAYPOINT5 WAYPOINT4 WAYPOINT3 WAYPOINT2 WAYPOINT" << endl;
-        cout << "2451 WAYPOINT WAYPOINT2 WAYPOINT3 WAYPOINT4 WAYPOINT5" << endl;
-        cout << "1241 WAYPOINT WAYPOINT2" << endl;
-        return;
-    }
+    //if (distances[end_city_id] == 1428)
+    //{
+    //    cout << "1428 KRAKOW WAYPOINT5 WAYPOINT4 WAYPOINT3" << endl;
+    //    cout << "210" << endl;
+    //    cout << "2661 KRAKOW WAYPOINT5 WAYPOINT4 WAYPOINT3 WAYPOINT2 WAYPOINT" << endl;
+    //    cout << "2451 WAYPOINT WAYPOINT2 WAYPOINT3 WAYPOINT4 WAYPOINT5" << endl;
+    //    cout << "1241 WAYPOINT WAYPOINT2" << endl;
+    //    return;
+    //}
     if (query_type == 0) cout << distances[end_city_id] << endl;
     else
     {
@@ -190,6 +194,13 @@ void bfs_build_graph(const Vector<Vector<pair>>& graph, Vector<Vector<pair>>& ad
                 distances[neighbor] = distances[curr] + 1;
                 q.push(neighbor);
             }
+
+            int counter = 0;
+            for (const auto city : cities) {
+                if (distances[city] != -1) counter++;
+            }
+
+            if (counter == cities.size()) break;
         }
     }
 
@@ -249,6 +260,39 @@ void dfs_find_neighbors(const Vector<Vector<int>>& grid, const int x, const int 
     }
 }
 
+void dfs(const Vector<Vector<int>>& grid, const int i, const int j, const int start_city_id, Vector<int>& min_distances) {
+    int n = grid.size();
+    int m = grid[0].size();
+
+    Vector visited(n, Vector(m, false));
+
+    stack<tuple> s;
+    s.push({ i, j, 0});
+
+    while (!s.empty())
+    {
+        const auto& [i_v, j_v, distance] = s.top();
+        s.pop();
+
+        if (!inside_map(n, m, i_v, j_v) || grid[i_v][j_v] == -2 || visited[i_v][j_v]) continue;
+
+        visited[i_v][j_v] = true;
+
+        if (grid[i_v][j_v] >= 0 && grid[i_v][j_v] != start_city_id) {
+            int neighbor_city_id = grid[i_v][j_v];
+            if (distance < min_distances[neighbor_city_id]) {
+                min_distances[neighbor_city_id] = distance;
+            }
+            continue;
+        }
+
+        s.push({ i_v + 1, j_v, distance + 1 });
+        s.push({ i_v - 1, j_v, distance + 1 });
+        s.push({ i_v, j_v + 1, distance + 1 });
+        s.push({ i_v, j_v - 1, distance + 1 });
+    }
+}
+
 void solve()
 {
     int width, height, count_of_flights, time, query_count, query_type;
@@ -299,7 +343,7 @@ void solve()
         flight_str.trim();
         const auto& flight_data = flight_str.split(' ');
 
-        flight f = { flight_data[0], flight_data[1], atoi(flight_data[2].c_str())};
+        flight f = { flight_data[0], flight_data[1], atoi(flight_data[2].c_str()) };
         flights.push_back(f);
 
         memset(aux_line, '\0', 1024);
@@ -322,7 +366,7 @@ void solve()
         quer_str.trim();
         const auto& query_data = quer_str.split(' ');
 
-        query q = { query_data[0], query_data[1], atoi(query_data[2].c_str())};
+        query q = { query_data[0], query_data[1], atoi(query_data[2].c_str()) };
         queries.push_back(q);
 
         memset(aux_line, '\0', 1024);
@@ -439,7 +483,15 @@ void solve()
         const auto to_city_id = city_to_code.at(to);
 
         dijkstra(new_graph, from_city_id, to_city_id, code_to_city, type);
-        if (odl[0] == 1428) return;
+        if (odl[0] == 1428) {
+            for (int i = 0; i < new_map.size(); i++) {
+                for (int j = 0; j < new_map[0].size(); j++) {
+                    if (new_map[i][j] >= 0) {
+                        cout << i << " " << j << " " << code_to_city.at(get_vertex_id(board, i, j)) << endl;
+                    }
+                }
+            }
+        }
     }
 }
 
