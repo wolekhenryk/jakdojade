@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 
 #define _CRT_SECURE_NO_WARNINGS
 
@@ -84,8 +85,13 @@ public:
         }
         else if (new_size > size_) {
             reserve(new_size);
-            for (size_t i = size_; i < new_size; i++) {
-                new (&data_[i]) T(value);
+            if constexpr (std::is_default_constructible_v<T> && std::is_trivial_v<T>) {
+                std::memset(data_ + size_, 0, (new_size - size_) * sizeof(T));
+            }
+            else {
+                for (size_t i = size_; i < new_size; i++) {
+                    new (&data_[i]) T(value);
+                }
             }
             size_ = new_size;
         }
@@ -134,6 +140,11 @@ public:
     T& front() const
     {
         return data_[0];
+    }
+
+    T* data() const
+    {
+        return data_;
     }
 
     T& back() const
