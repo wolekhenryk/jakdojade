@@ -11,7 +11,7 @@ struct greater_fn
     }
 };
 
-template <typename T, typename Compare = greater_fn<T>>
+template <typename T, typename Compare>
 class heap
 {
 private:
@@ -33,9 +33,6 @@ private:
 
     void heapify_up(std::size_t i) {
         while (i != 0 && compare_(heap_[i], heap_[parent(i)])) {
-            if (compare_(heap_[i], heap_[parent(i)])) {
-                break;
-            }
             swap(parent(i), i);
             i = parent(i);
         }
@@ -59,7 +56,7 @@ private:
     }
 
 public:
-    heap() = default;
+    heap() : compare_(Compare()) {}
 
     explicit heap(std::size_t reserve_size)
         : heap_()

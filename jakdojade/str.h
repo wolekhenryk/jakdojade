@@ -15,6 +15,14 @@ class str {
     char* buf_ = nullptr;
     unsigned int size_ = 0;
 
+    
+
+    // Helper method to free the buffer
+
+public:
+    // Default constructor
+    str() {}
+
     void assign(const char* s) {
         if (s == nullptr) {
             delete[] buf_;
@@ -45,12 +53,6 @@ class str {
             size_ = len + 1;
         }
     }
-
-    // Helper method to free the buffer
-
-public:
-    // Default constructor
-    str() {}
 
     // Constructor with a const char* argument
     explicit str(const char* s) {

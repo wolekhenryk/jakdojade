@@ -3,8 +3,7 @@
 #include <iostream>
 
 #include <chrono>
-#include <vector>
-#include <queue>
+#include <cstring>
 
 #include "str.h"
 #include "Vector.h"
@@ -19,9 +18,6 @@ constexpr int inf = INT_MAX;
 
 constexpr int dx[] = { -1, 0, 1, 0 };
 constexpr int dy[] = { 0, 1, 0, -1 };
-
-int count_of_flights_pushed = 0;
-unsigned long long count_of_edges = 0;
 
 struct flight
 {
@@ -66,6 +62,13 @@ struct pair
     bool operator==(const pair& other) const
     {
         return (to == other.to) && (weight == other.weight);
+    }
+};
+
+struct pair_comparator
+{
+    bool operator() (const pair& a, const pair& b) const {
+        return a.weight < b.weight;
     }
 };
 
@@ -125,7 +128,7 @@ void dijkstra(const Vector<Vector<pair>>& graph, const int start_city_id, const 
     distances[start_city_id] = 0;
     Vector prev(n, -1);
 
-    heap<pair> pq(count_of_edges);
+    heap<pair, pair_comparator> pq;
     pq.push({ start_city_id, 0 });
 
     while (!pq.empty())
@@ -185,7 +188,6 @@ void bfs(arr<int> grid, const int x, const int y, const int start, Vector<Vector
             const auto neighbor_id = grid[i][j];
 
             adj_list[start].push_back({ neighbor_id, distance });
-            count_of_edges++;
             continue;
         }
 
@@ -215,7 +217,7 @@ void bfs(arr<int> grid, const int x, const int y, const int start, Vector<Vector
 int main()
 {
     auto before_program = std::chrono::high_resolution_clock::now();
-	std::ios_base::sync_with_stdio(false);
+    std::ios_base::sync_with_stdio(false);
     cin.tie(NULL);
     cout.tie(NULL);
     int width, height, count_of_flights, time, query_count, query_type;
@@ -321,41 +323,19 @@ int main()
     from_city_flight.reserve(16);
     to_city_flight.reserve(16);
 
-    char buffer[128];
+    char buffer[64]{};
 
     int j = 0;
-    for (int i = 0; i < count_of_flights; i++)
+    int counter_f = 0;
+
+    while (counter_f < count_of_flights && fgets(buffer, 64, stdin))
     {
-        char from_buffer[16]{};
-        char to_buffer[16]{};
-        char duration_buffer[16]{};
+        char* from_buffer = buffer;
+        char* to_buffer = strchr(from_buffer, ' ');
+        if (to_buffer) *to_buffer++ = '\0';
 
-        //Read from_city first
-        j = 0;
-        while (j < 16)
-        {
-            const char c = getchar();
-            if (c == '\n' || c == ' ') break;
-            from_buffer[j++] = c;
-        }
-
-        //Read destination afterwards
-        j = 0;
-        while (j < 16)
-        {
-            const char c = getchar();
-            if (c == '\n' || c == ' ') break;
-            to_buffer[j++] = c;
-        }
-
-        //Read duration afterwards
-        j = 0;
-        while (j < 16)
-        {
-            const char c = getchar();
-            if (c == '\n') break;
-            duration_buffer[j++] = c;
-        }
+        char* duration_buffer = strchr(to_buffer, ' ');
+        if (duration_buffer) *duration_buffer++ = '\0';
 
         const int duration = atoi(duration_buffer);
 
@@ -366,7 +346,7 @@ int main()
         const int to_city_flight_id = city_to_code.at(to_city_flight);
 
         new_graph[from_city_flight_id].push_back({ to_city_flight_id, duration });
-        count_of_edges++;
+        ++counter_f;
     }
 
     str source, destination;
@@ -395,14 +375,6 @@ int main()
 
     delete[] aux_line;
 
-    auto before_dijkstra = std::chrono::high_resolution_clock::now();
-
-    if (height == 30 && width == 2048)
-    {
-        cout << "Exiting at T+ " << std::chrono::duration_cast<std::chrono::milliseconds>(before_dijkstra - before_program).count() << " ms" << endl;
-        return 0;
-    }
-
     for (const auto& [from, to, type] : queries)
     {
         const auto from_city_id = city_to_code.at(from);
@@ -411,11 +383,5 @@ int main()
         dijkstra(new_graph, from_city_id, to_city_id, code_to_city, type);
     }
 
-    auto after_dijkstra = std::chrono::high_resolution_clock::now();
-
-    //cout << "======================" << endl;
-    //cout << "Program done in: " << std::chrono::duration_cast<std::chrono::milliseconds>(after_dijkstra - before_program).count() << " ms" << endl;
-    //cout << "Input read in " << std::chrono::duration_cast<std::chrono::milliseconds>(before_dijkstra - before_program).count() << " ms" << endl;
-    //cout << "Dijkstra done in " << std::chrono::duration_cast<std::chrono::milliseconds>(after_dijkstra - before_dijkstra).count() << " ms" << endl;
     return 0;
 }
