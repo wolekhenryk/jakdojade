@@ -135,6 +135,7 @@
     <ClCompile Include="jakdojade.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="arr.h" />
     <ClInclude Include="hash_map.h" />
     <ClInclude Include="heap.h" />
     <ClInclude Include="queue.h" />

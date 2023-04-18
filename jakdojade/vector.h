@@ -152,6 +152,11 @@ public:
         return data_[size_ - 1];
     }
 
+    T* get_data()
+    {
+        return data_;
+    }
+
     void reverse() {
         for (int i = 0; i < size_ / 2; i++) {
             std::swap(data_[i], data_[size_ - i - 1]);

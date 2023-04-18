@@ -1,11 +1,11 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <iostream>
-#include <chrono>
 
 #include "str.h"
 #include "Vector.h"
 #include "heap.h"
+#include "arr.h"
 #include "queue.h"
 #include "hash_map.h"
 
@@ -16,12 +16,7 @@ constexpr int inf = INT_MAX;
 constexpr int dx[] = { -1, 0, 1, 0 };
 constexpr int dy[] = { 0, 1, 0, -1 };
 
-int city_count_num = 0;
-int count_of_edges = 0;
-
 int count_of_flights_pushed = 0;
-
-std::chrono::milliseconds graph_construction_time_ms;
 
 struct flight
 {
@@ -120,7 +115,6 @@ int get_vertex_id(const Vector<str>& board, const int i, const int j)
 
 void dijkstra(const Vector<Vector<pair>>& graph, const int start_city_id, const int end_city_id, const hash_map<int, str>& code_to_city, const int query_type)
 {
-
     const auto n = graph.size();
     Vector distances(n, INT_MAX);
     distances[start_city_id] = 0;
@@ -169,126 +163,125 @@ void dijkstra(const Vector<Vector<pair>>& graph, const int start_city_id, const 
     }
 }
 
-void bfs(const Vector<int>& grid, const int x, const int y, const int start, Vector<bool>& visited, Vector<Vector<pair>>& adj_list, const int grid_width, const int grid_height)
+void bfs(arr<int> grid, const int x, const int y, const int start, Vector<Vector<bool>>& visited, Vector<Vector<pair>>& adj_list, const int n, const int m)
 {
-    const int n = grid_height;
-    const int m = grid_width;
     queue<tuple> q;
     q.push({ x, y, 0 });
-    visited[x * grid_width + y] = true;
+    visited[x][y] = true;
 
     while (!q.empty())
     {
         const auto [i, j, distance] = q.front();
         q.pop();
 
-        if (grid[i * grid_width + j] >= 0 && grid[i * grid_width + j] != start)
+        if (grid[i][j] >= 0 && grid[i][j] != start)
         {
-            const auto neighbor_id = grid[i * grid_width + j];
+            const auto neighbor_id = grid[i][j];
             adj_list[start].push_back({ neighbor_id, distance });
             continue;
         }
 
-        if (i > 0 && !visited[(i - 1) * grid_width + j] && grid[(i - 1) * grid_width + j] != -2)
+        if (i > 0 && !visited[i - 1][j] && grid[i - 1][j] != -2)
         {
             q.push({ i - 1, j, distance + 1 });
-            visited[(i - 1) * grid_width + j] = true;
+            visited[i - 1][j] = true;
         }
-        if (i < n - 1 && !visited[(i + 1) * grid_width + j] && grid[(i + 1) * grid_width + j] != -2)
+        if (i < n - 1 && !visited[i + 1][j] && grid[i + 1][j] != -2)
         {
             q.push({ i + 1, j, distance + 1 });
-            visited[(i + 1) * grid_width + j] = true;
+            visited[i + 1][j] = true;
         }
-        if (j > 0 && !visited[i * grid_width + j - 1] && grid[i * grid_width + j - 1] != -2)
+        if (j > 0 && !visited[i][j - 1] && grid[i][j - 1] != -2)
         {
             q.push({ i, j - 1, distance + 1 });
-            visited[i * grid_width + j - 1] = true;
+            visited[i][j - 1] = true;
         }
-        if (j < m - 1 && !visited[i * grid_width + j + 1] && grid[i * grid_width + j + 1] != -2)
+        if (j < m - 1 && !visited[i][j + 1] && grid[i][j + 1] != -2)
         {
             q.push({ i, j + 1, distance + 1 });
-            visited[i * grid_width + j + 1] = true;
+            visited[i][j + 1] = true;
         }
     }
 }
 
 void solve()
 {
-    int width, height, count_of_flights, time, query_count, query_type, city_count = 0;
+    int width, height, count_of_flights, time, query_count, query_type;
 
     Vector<str> board;
     Vector<flight> flights;
     Vector<query> queries;
-    Vector<str> cities;
-    Vector<int> city_ids;
-
-    hash_map<int, str> code_to_city;
-    hash_map<str, int> city_to_code;
 
     cin >> width >> height;
 
-    bool no_roads = true;
-
-    auto start_time = std::chrono::high_resolution_clock::now();
-
-    Vector<int> og_map(width * height);
-
-    auto end_time = std::chrono::high_resolution_clock::now();
-
-    auto res = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-
     Vector new_graph(width * height, Vector<pair>());
 
-    str city_name_getchar;
-    for (int i = 0; i < width * height; i++)
+    auto line = new char[width + 1] {};
+
+    for (int i = 0; i < height; i++)
     {
-        const char c = getchar();
-
-        if (c == '\n')
+        int j = 0;
+        while (j < width)
         {
-            i--;
-            continue;
+            const char c = getchar();
+            if (c != '\n') line[j++] = c;
         }
+        str board_line(line);
+        board_line.trim();
 
-        if (c == '.')
+        board.push_back(str(board_line));
+
+        memset(line, '\0', width + 1);
+    }
+
+    delete[] line;
+
+    Vector<str> cities;
+    Vector<int> city_ids;
+
+    int city_count = 0;
+    hash_map<int, str> code_to_city;
+    hash_map<str, int> city_to_code;
+
+    for (int i = 0; i < board.size(); i++)
+    {
+        const auto& row = board[i];
+        for (int j = 0; j < row.length(); j++)
         {
-            og_map[i] = -2;
-            if (city_name_getchar.length() != 0)
+            if (row[j] == '*')
             {
-                cities.push_back(city_name_getchar);
-                city_name_getchar = "";
-            }
-        } else if (isalnum(c))
-        {
-            og_map[i] = -2;
-            city_name_getchar += c;
-        } else if (c == '#')
-        {
-            no_roads = false;
-            og_map[i] = -1;
-            if (city_name_getchar.length() != 0)
-            {
-                cities.push_back(city_name_getchar);
-                city_name_getchar = "";
-            }
-        } else if (c == '*')
-        {
-            city_ids.push_back(i);
-            og_map[i] = i;
-            if (city_name_getchar.length() != 0)
-            {
-                cities.push_back(city_name_getchar);
-                city_name_getchar = "";
+                const auto& [city_i, city_j] = where_city(board, i, j);
+                const auto& result = find_city_name(board, city_i, city_j);
+
+                city_to_code.insert(result, i * width + j);
+                code_to_city.insert(i * width + j, result);
+
+                city_ids.push_back(i * width + j);
+
+                cities.push_back(result);
+                city_count++;
             }
         }
     }
 
-    city_count = cities.size();
-    for (int i = 0; i < city_count; i++)
+    bool no_roads = true;
+    arr<int> grid2d(height, width);
+
+    for (int i = 0; i < height; i++)
     {
-        code_to_city.insert(city_ids[i], cities[i]);
-        city_to_code.insert(cities[i], city_ids[i]);
+        const auto& row = board[i];
+
+        for (int j = 0; j < row.length(); j++)
+        {
+            if (row[j] == '.' || isalpha(row[j]) || isalnum(row[j])) grid2d[i][j] = -2;
+            if (row[j] == '*') grid2d[i][j] = i * width + j;
+            if (row[j] == '#') {
+                grid2d[i][j] = -1;
+                no_roads = false;
+            }
+        }
     }
+
 
     if (!no_roads)
     {
@@ -296,10 +289,9 @@ void solve()
         {
             if (code_to_city.contains(i))
             {
-                Vector visited(height * width, false);
+                Vector visited(height, Vector(width, false));
                 Vector<int> neighbors;
-                bfs(og_map, i / width, i % width, i, visited, new_graph, width, height);
-                city_count_num++;
+                bfs(grid2d, i / width, i % width, i, visited, new_graph, height, width);
             }
             else
             {
@@ -325,8 +317,12 @@ void solve()
         flight_str.trim();
         const auto& flight_data = flight_str.split(' ');
 
-        new_graph[city_to_code.at(flight_data[0])].push_back({ city_to_code.at(flight_data[1]), atoi(flight_data[2].c_str()) });
+        const int from_city_code = city_to_code.at(flight_data[0]);
+        const int to_city_code = city_to_code.at(flight_data[1]);
+        const int duration = atoi(flight_data[2].c_str());
 
+        new_graph[from_city_code].push_back({ to_city_code, duration });
+        count_of_flights_pushed++;
         memset(aux_line, '\0', 1024);
     }
 
@@ -366,6 +362,9 @@ void solve()
 
 int main()
 {
+	std::ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    cout.tie(NULL);
     solve();
     return 0;
 }
