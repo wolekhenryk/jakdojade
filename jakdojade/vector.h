@@ -68,7 +68,7 @@ public:
         if (new_capacity > capacity_) {
             T* new_data = new T[new_capacity];
             if (data_) {
-                std::copy(data_, data_ + size_, new_data);
+                std::move(data_, data_ + size_, new_data);
                 delete[] data_;
             }
             data_ = new_data;
@@ -99,7 +99,8 @@ public:
 
     void push_back(const T& value) {
         if (size_ == capacity_) {
-            reserve(capacity_ == 0 ? 1 : 2 * capacity_);
+	        const size_t new_capacity = capacity_ == 0 ? 1 : capacity_ * 2;
+            reserve(new_capacity);
         }
         new (&data_[size_]) T(value);
         size_++;

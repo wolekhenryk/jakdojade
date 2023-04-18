@@ -2,6 +2,10 @@
 
 #include <iostream>
 
+#include <chrono>
+#include <vector>
+#include <queue>
+
 #include "str.h"
 #include "Vector.h"
 #include "heap.h"
@@ -17,6 +21,7 @@ constexpr int dx[] = { -1, 0, 1, 0 };
 constexpr int dy[] = { 0, 1, 0, -1 };
 
 int count_of_flights_pushed = 0;
+unsigned long long count_of_edges = 0;
 
 struct flight
 {
@@ -120,7 +125,7 @@ void dijkstra(const Vector<Vector<pair>>& graph, const int start_city_id, const 
     distances[start_city_id] = 0;
     Vector prev(n, -1);
 
-    heap<pair> pq;
+    heap<pair> pq(count_of_edges);
     pq.push({ start_city_id, 0 });
 
     while (!pq.empty())
@@ -163,6 +168,7 @@ void dijkstra(const Vector<Vector<pair>>& graph, const int start_city_id, const 
     }
 }
 
+
 void bfs(arr<int> grid, const int x, const int y, const int start, Vector<Vector<bool>>& visited, Vector<Vector<pair>>& adj_list, const int n, const int m)
 {
     queue<tuple> q;
@@ -177,7 +183,9 @@ void bfs(arr<int> grid, const int x, const int y, const int start, Vector<Vector
         if (grid[i][j] >= 0 && grid[i][j] != start)
         {
             const auto neighbor_id = grid[i][j];
+
             adj_list[start].push_back({ neighbor_id, distance });
+            count_of_edges++;
             continue;
         }
 
@@ -204,12 +212,17 @@ void bfs(arr<int> grid, const int x, const int y, const int start, Vector<Vector
     }
 }
 
-void solve()
+int main()
 {
+    auto before_program = std::chrono::high_resolution_clock::now();
+	std::ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    cout.tie(NULL);
     int width, height, count_of_flights, time, query_count, query_type;
 
+    auto start_time = std::chrono::high_resolution_clock::now();
+
     Vector<str> board;
-    Vector<flight> flights;
     Vector<query> queries;
 
     cin >> width >> height;
@@ -282,7 +295,6 @@ void solve()
         }
     }
 
-
     if (!no_roads)
     {
         for (int i = 0; i < width * height; i++)
@@ -301,38 +313,70 @@ void solve()
     }
 
     cin >> count_of_flights;
-    auto aux_line = new char[1024] {};
     cin.ignore();
+
+    str from_city_flight;
+    str to_city_flight;
+
+    from_city_flight.reserve(16);
+    to_city_flight.reserve(16);
+
+    char buffer[128];
+
+    int j = 0;
     for (int i = 0; i < count_of_flights; i++)
     {
-        int j = 0;
-        while (j < 1024)
+        char from_buffer[16]{};
+        char to_buffer[16]{};
+        char duration_buffer[16]{};
+
+        //Read from_city first
+        j = 0;
+        while (j < 16)
+        {
+            const char c = getchar();
+            if (c == '\n' || c == ' ') break;
+            from_buffer[j++] = c;
+        }
+
+        //Read destination afterwards
+        j = 0;
+        while (j < 16)
+        {
+            const char c = getchar();
+            if (c == '\n' || c == ' ') break;
+            to_buffer[j++] = c;
+        }
+
+        //Read duration afterwards
+        j = 0;
+        while (j < 16)
         {
             const char c = getchar();
             if (c == '\n') break;
-            aux_line[j++] = c;
+            duration_buffer[j++] = c;
         }
 
-        str flight_str(aux_line);
-        flight_str.trim();
-        const auto& flight_data = flight_str.split(' ');
+        const int duration = atoi(duration_buffer);
 
-        const int from_city_code = city_to_code.at(flight_data[0]);
-        const int to_city_code = city_to_code.at(flight_data[1]);
-        const int duration = atoi(flight_data[2].c_str());
+        from_city_flight.put_chars(from_buffer);
+        to_city_flight.put_chars(to_buffer);
 
-        new_graph[from_city_code].push_back({ to_city_code, duration });
-        count_of_flights_pushed++;
-        memset(aux_line, '\0', 1024);
+        const int from_city_flight_id = city_to_code.at(from_city_flight);
+        const int to_city_flight_id = city_to_code.at(to_city_flight);
+
+        new_graph[from_city_flight_id].push_back({ to_city_flight_id, duration });
+        count_of_edges++;
     }
 
     str source, destination;
 
+    auto aux_line = new char[256] {};
     cin >> query_count;
     cin.ignore();
     for (int i = 0; i < query_count; i++) {
         int j = 0;
-        while (j < 1024)
+        while (j < 256)
         {
             const char c = getchar();
             if (c == '\n') break;
@@ -346,10 +390,18 @@ void solve()
         query q = { query_data[0], query_data[1], atoi(query_data[2].c_str()) };
         queries.push_back(q);
 
-        memset(aux_line, '\0', 1024);
+        memset(aux_line, '\0', 256);
     }
 
     delete[] aux_line;
+
+    auto before_dijkstra = std::chrono::high_resolution_clock::now();
+
+    if (height == 30 && width == 2048)
+    {
+        cout << "Exiting at T+ " << std::chrono::duration_cast<std::chrono::milliseconds>(before_dijkstra - before_program).count() << " ms" << endl;
+        return 0;
+    }
 
     for (const auto& [from, to, type] : queries)
     {
@@ -358,13 +410,12 @@ void solve()
 
         dijkstra(new_graph, from_city_id, to_city_id, code_to_city, type);
     }
-}
 
-int main()
-{
-	std::ios_base::sync_with_stdio(false);
-    cin.tie(NULL);
-    cout.tie(NULL);
-    solve();
+    auto after_dijkstra = std::chrono::high_resolution_clock::now();
+
+    //cout << "======================" << endl;
+    //cout << "Program done in: " << std::chrono::duration_cast<std::chrono::milliseconds>(after_dijkstra - before_program).count() << " ms" << endl;
+    //cout << "Input read in " << std::chrono::duration_cast<std::chrono::milliseconds>(before_dijkstra - before_program).count() << " ms" << endl;
+    //cout << "Dijkstra done in " << std::chrono::duration_cast<std::chrono::milliseconds>(after_dijkstra - before_dijkstra).count() << " ms" << endl;
     return 0;
 }

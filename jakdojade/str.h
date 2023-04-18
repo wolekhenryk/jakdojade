@@ -67,6 +67,18 @@ public:
         assign(other.buf_);
     }
 
+    void reserve(const int size)
+    {
+        buf_ = new char[size + 1] {};
+    }
+
+    void put_chars(const char* buf)
+    {
+        memset(buf_, '\0', 16);
+        memcpy(buf_, buf, strlen(buf));
+        size_ = strlen(buf);
+    }
+
     // Move constructor
     str(str&& other) noexcept {
         buf_ = other.buf_;
