@@ -2,36 +2,29 @@
 
 #include "vector.h"
 
-template<typename T>
-class arr
-{
+template <typename T>
+class arr {
 private:
     Vector<T> buffer_;
     int rows_;
     int cols_;
 
 public:
-    // Constructor
-    arr(int rows, int cols) : buffer_(rows * cols), rows_(rows), cols_(cols) {}
+    arr(const int rows, const int cols) : buffer_(rows * cols), rows_(rows), cols_(cols) {}
 
-    int get_rows() const { return rows_; }
-    int get_cols() const { return cols_; }
+    [[nodiscard]] int get_rows() const { return rows_; }
+    [[nodiscard]] int get_cols() const { return cols_; }
 
-    // Overload operator[] to access elements in the 1D buffer as if they were arranged in a 2D grid
-    class Proxy {
+    class proxy {
     public:
-        Proxy(T* data, int cols) : data_(data), cols_(cols) {}
+        proxy(T *data, const int cols) : data_(data), cols_(cols) {}
 
-        T& operator[](int col) {
-            return data_[col];
-        }
+        T &operator[](int col) { return data_[col]; }
 
     private:
-        T* data_;
+        T *data_;
         int cols_;
     };
 
-    Proxy operator[](int row) {
-        return Proxy(&buffer_[row * cols_], cols_);
-    }
+    proxy operator[](const int row) { return proxy(&buffer_[row * cols_], cols_); }
 };

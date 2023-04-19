@@ -5,29 +5,17 @@
 template <typename T>
 class queue {
 public:
-    void push(const T& value) {
-        data_.push_back(value);
-    }
+    void push(const T &value) { data_.push_back(value); }
 
-    void pop() {
-        data_.erase(data_.begin());
-    }
+    void pop() { data_.erase(data_.begin()); }
 
-    T& front() {
-        return data_.front();
-    }
+    T &front() { return data_.front(); }
 
-    T& back() {
-        return data_.back();
-    }
+    T &back() { return data_.back(); }
 
-    bool empty() const {
-        return data_.empty();
-    }
+    bool empty() const { return data_.empty(); }
 
-    size_t size() const {
-        return data_.size();
-    }
+    [[nodiscard]] size_t size() const { return data_.size(); }
 
 private:
     Vector<T> data_;
