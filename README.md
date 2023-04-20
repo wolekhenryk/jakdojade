@@ -1,7 +1,7 @@
 
 # Jakdojade
 
-Jak dojade is a C++ console application built in Visual Studio. It reads the width and height of the map, followed by the map itself, which is composed of alphanumeric characters, hashtags, dots and asterisks symbolizing cities.
+Jak dojade is a C++ console application built in Visual Studio. The main functionality and purpose of this project is its efficient and easy-to-use implementation of pathfinding algorithms. It reads the width and height of the map, followed by the map itself, which is composed of alphanumeric characters, hashtags, dots and asterisks symbolizing cities.
 
 After reading the map, the user is prompted to provide the number of one-directional flight connections and the connections themselves, line by line, of format:
 
