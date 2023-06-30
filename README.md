@@ -15,6 +15,44 @@ This project was created to help getting familiar with constructing and represen
 
 Additionally, this project includes custom-made data structures essential for optimization, including hashmaps, heaps, queues, strings, and vectors.
 
+##Example input
+
+`
+20 20
+.........GDANSK.....
+........*...........
+........#...........
+........#...........
+*##################.
+#SZCZECIN.........#.
+#.................#.
+##................#.
+.############*#####.
+.#...WARSZAWA.......
+.#..................
+.#############......
+.#...........#......
+.#..WROCLAW.##......
+.#..*.......*.......
+.####.......#KIELCE.
+......*##.#########.
+.OPOLE..#.*.......#.
+........#.KRAKOW..#.
+........###########.
+0
+3
+KIELCE KRAKOW 0
+KRAKOW GDANSK 0
+KRAKOW GDANSK 1
+`
+
+Expected output:
+`
+5
+40
+40 KIELCE SZCZECIN
+`
+
 ## Installation
 
 To install and run Jak dojade, you need to have Visual Studio installed on your computer.
