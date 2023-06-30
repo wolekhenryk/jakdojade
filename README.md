@@ -17,6 +17,7 @@ Additionally, this project includes custom-made data structures essential for op
 
 ##Example input
 
+
 `
 20 20
 .........GDANSK.....
